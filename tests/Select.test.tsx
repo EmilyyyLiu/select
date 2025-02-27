@@ -2417,4 +2417,80 @@ describe('Select.Basic', () => {
     expect(onBlur).toHaveBeenCalledTimes(2);
     expect(inputElem.value).toEqual('bb');
   });
+
+  describe.only(' mobile devices and clearIcon', () => {
+    const originalMatchMedia = window.matchMedia;
+    beforeAll(() => {
+      window.matchMedia = jest.fn().mockImplementation((query) => ({
+        matches: query === '(hover: none)', // 关键模拟点
+        addListener: jest.fn(),
+        removeListener: jest.fn(),
+      }));
+    });
+
+    afterAll(() => {
+      window.matchMedia = originalMatchMedia;
+    });
+
+    const renderSelect = (props = {}) => {
+      return render(
+        <Select
+          allowClear
+          options={[{ value: 'test', label: 'Test' }]}
+          suffixIcon="suffixIcon"
+          {...props}
+        />,
+      );
+    };
+    test('Show clearIcon when value is included ', async () => {
+      (window.matchMedia as jest.Mock).mockImplementation((query) => ({
+        matches: query === '(hover: none)',
+      }));
+
+      const { container } = renderSelect({ defaultValue: 'test' });
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      });
+
+      const clearIcon = container.querySelector('.rc-select-clear');
+      expect(clearIcon).toBeInTheDocument();
+
+      const arrowIcon = container.querySelector('.rc-select-arrow');
+      expect(arrowIcon).not.toBeInTheDocument();
+    });
+
+    test('Hide clearIcon when value is not included', async () => {
+      (window.matchMedia as jest.Mock).mockImplementation((query) => ({
+        matches: query === '(hover: none)',
+      }));
+
+      const { container } = renderSelect();
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      });
+
+      const clearIcon = container.querySelector('.rc-select-clear');
+      expect(clearIcon).toBeNull();
+
+      const arrowIcon = container.querySelector('.rc-select-arrow');
+      expect(arrowIcon).toBeInTheDocument();
+    });
+
+    test('Show clearIcon and suffixIcon when value is included on PC', async () => {
+      (window.matchMedia as jest.Mock).mockImplementation(() => ({
+        matches: false,
+      }));
+
+      const { container } = renderSelect({ defaultValue: 'test' });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      });
+      const clearIcon = container.querySelector('.rc-select-clear');
+      const arrowIcon = container.querySelector('.rc-select-arrow');
+      expect(clearIcon).toBeInTheDocument();
+      expect(arrowIcon).toBeInTheDocument();
+    });
+  });
 });

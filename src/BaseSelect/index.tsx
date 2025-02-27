@@ -714,7 +714,13 @@ const BaseSelect = React.forwardRef<BaseSelectRef, BaseSelectProps>((props, ref)
   // ==================================================================
 
   // ============================= Arrow ==============================
-  const showSuffixIcon = !!suffixIcon || loading;
+  const showSuffixIcon = React.useMemo(() => {
+    // Mobile devices without hover effect
+    if (window.matchMedia('(hover: none)').matches && allowClear) {
+      return !displayValues?.length;
+    }
+    return !!suffixIcon || loading;
+  }, [suffixIcon, loading]);
   let arrowNode: React.ReactNode;
 
   if (showSuffixIcon) {
